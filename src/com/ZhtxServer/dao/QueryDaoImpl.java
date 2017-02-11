@@ -73,6 +73,39 @@ public class QueryDaoImpl {
 		return result;
 	}
 
+	//获得资产类的一级科目列表
+	public List<String> account_class1(String openid){
+		List<String> result=new ArrayList<String>();
+		String db=getDb(openid);
+		boolean permit=getPermit(openid,"account_balance");
+		if((!db.equals(""))&&permit){
+			Connection conn=ConnectUtil.open(db);
+			String sql="select distinct `会计科目` from `account_real` where LEFT(`会计科目`,1)=1 order by `会计科目`";
+			PreparedStatement pstmt;
+			if(conn!=null){
+				try {
+					pstmt=conn.prepareStatement(sql);
+                    ResultSet rs=pstmt.executeQuery();
+					while (rs.next()) {
+						String s = rs.getString(1);
+						result.add(s);
+					}
+
+				}catch (SQLException e){
+					e.printStackTrace();
+				}finally {
+					ConnectUtil.close(conn);
+				}
+			}
+		}else if(!permit){
+			result.add("没有权限");
+
+		}else {
+			result.add("数据库连接失败");
+		}
+		return result;
+	}
+	
 	public String getToken() {
 		String s="";
 		Connection conn=ConnectUtil.open("client_company");
