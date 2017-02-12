@@ -119,6 +119,19 @@ public class QueryServlet extends HttpServlet {
 				}
 			break;
 		}
+		case "account_class1":{
+			String openid=request.getParameter("openid");
+			QueryDaoImpl dao= new QueryDaoImpl();
+			List<String> list=dao.account_class1(openid);
+			if (list == null){
+				out.print("0");
+			}else{
+				Gson gson=new Gson();
+				Type t=new TypeToken<List<String>>(){}.getType();
+				out.print(gson.toJson(list,t));
+			}
+			break;
+		}
 		
 		//生成指定record表的csv文件
 		case "createcsv":{
