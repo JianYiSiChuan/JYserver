@@ -98,10 +98,10 @@ public class QueryDaoImpl {
 				}
 			}
 		}else if(!permit){
-			result.add("没有权限");
+			result=null;
 
 		}else {
-			result.add("数据库连接失败");
+			result=null;
 		}
 		return result;
 	}
