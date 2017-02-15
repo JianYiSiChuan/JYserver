@@ -151,7 +151,7 @@ public class QueryDaoImpl {
 					pstmt2.setString(3,date);
 					ResultSet rs2=pstmt2.executeQuery();
 					while (rs2.next()){
-						if(rs2.getString(1)=="借"){
+						if(rs2.getString(1).equals("借")){
 							debit=debit+rs2.getDouble(2);
 						}else {
 							credit=credit+rs2.getDouble(2);
