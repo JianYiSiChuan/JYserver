@@ -19,6 +19,7 @@ import com.ZhtxServer.cons.CSVFileUtil;
 import com.ZhtxServer.cons.ConnectUtil;
 import com.ZhtxServer.cons.Constant;
 import com.ZhtxServer.table.Account_stock_balance;
+import com.ZhtxServer.dao.AccountReal;
 
 public class QueryDaoImpl {
 	public boolean refresh(String token){
@@ -40,6 +41,134 @@ public class QueryDaoImpl {
 		}
     	}
 		return false;	
+	}
+
+	//获得一级科目列表,其中参数first_num是会计科目编号的第一个数字
+	public List<String> account_class1(String openid,int first_num){
+		List<String> result=new ArrayList<String>();
+		String db=getDb(openid);
+		boolean permit=getPermit(openid,"account_balance");
+		if((!db.equals(""))&&permit){
+			Connection conn=ConnectUtil.open(db);
+			String sql="select distinct `会计科目` from `account_real` where LEFT(`会计科目`,1)="+first_num+" order by `会计科目`";
+			PreparedStatement pstmt;
+			if(conn!=null){
+				try {
+					pstmt=conn.prepareStatement(sql);
+                    ResultSet rs=pstmt.executeQuery();
+					while (rs.next()) {
+						String s = rs.getString(1);
+						String s2="";
+                        String sql2="select `item_name` from `account_item` where `item_num`=?";
+						PreparedStatement pstmt2=conn.prepareStatement(sql2);
+						pstmt2.setString(1,s);
+						ResultSet rs2=pstmt2.executeQuery();
+						while (rs2.next()){
+							s2=rs2.getString(1);
+						}
+						result.add(s2);
+					}
+
+				}catch (SQLException e){
+					e.printStackTrace();
+				}finally {
+					ConnectUtil.close(conn);
+				}
+			}
+		}else if(!permit){
+			result=null;
+
+		}else {
+			result=null;
+		}
+		return result;
+	}
+
+	//给定一级科目后，根据输入关键字来获得二级科目的智能提示
+	public List<String> account_class2(String openid,String class1,String keyword){
+		List<String> temp=new ArrayList<String>();
+		List<String> result=new ArrayList<String>();
+		String db=getDb(openid);
+		boolean permit=getPermit(openid,"account_balance");
+		if((!db.equals(""))&&(permit)){
+			Connection conn=ConnectUtil.open(db);
+			String sql="select `item_num` from `account_item` where `item_name`=?";
+			PreparedStatement pstmt;
+			if(conn!=null){
+				try{
+					String s="";
+					pstmt=conn.prepareStatement(sql);
+					pstmt.setString(1,class1);
+					ResultSet rs=pstmt.executeQuery();
+					if(rs.next()) s = rs.getString(1);
+					String sql2="select distinct `class_2` from `account_real` where `会计科目`=?";
+					PreparedStatement pstmt2=conn.prepareStatement(sql2);
+					pstmt2.setString(1,s);
+					ResultSet rs2=pstmt2.executeQuery();
+					while (rs2.next()){
+						temp.add(rs2.getString(1));
+					}
+					for (String data:temp) {
+						if (data.contains(keyword)) {
+							result.add(data);
+						}
+					}
+				}catch (SQLException e){
+					e.printStackTrace();
+				}finally {
+					ConnectUtil.close(conn);
+				}
+			}
+
+		}else {
+			result=null;
+		}
+        return result;
+	}
+
+	//根据提交的一级科目，二级科目查询指定时间的账户余额
+	public List<Double> account_balance(String openid,String date,String class1,String class2) {
+		List<Double> result=new ArrayList<Double>();
+		String db = getDb(openid);
+		boolean permit = getPermit(openid, "account_balance");
+		if ((!db.equals("")) && (permit)) {
+			Connection conn = ConnectUtil.open(db);
+			String sql = "select `item_num` from `account_item` where `item_name`=?";
+			PreparedStatement pstmt;
+			if (conn != null) {
+				try {
+					double debit=0;
+					double credit=0;
+					String s = "";
+					pstmt = conn.prepareStatement(sql);
+					pstmt.setString(1, class1);
+					ResultSet rs = pstmt.executeQuery();
+					if (rs.next()) s = rs.getString(1);
+					String sql2="select `借贷方`,`金额` from `account_real` where `会计科目`=? and `class_2`=? and `时间`<=?";
+					PreparedStatement pstmt2=conn.prepareStatement(sql2);
+					pstmt2.setString(1,s);
+					pstmt2.setString(2,class2);
+					pstmt2.setString(3,date);
+					ResultSet rs2=pstmt2.executeQuery();
+					while (rs2.next()){
+						if(rs2.getString(1)=="借"){
+							debit=debit+rs2.getDouble(2);
+						}else {
+							credit=credit+rs2.getDouble(2);
+						}
+					}
+					result.add(debit);
+					result.add(credit);
+				} catch (SQLException e) {
+					e.printStackTrace();
+				} finally {
+					ConnectUtil.close(conn);
+				}
+			}
+		}else {
+			result=null;
+		}
+		return result;
 	}
 
 	public String accountb(String openid) {
@@ -73,39 +202,6 @@ public class QueryDaoImpl {
 		return result;
 	}
 
-	//获得资产类的一级科目列表
-	public List<String> account_class1(String openid){
-		List<String> result=new ArrayList<String>();
-		String db=getDb(openid);
-		boolean permit=getPermit(openid,"account_balance");
-		if((!db.equals(""))&&permit){
-			Connection conn=ConnectUtil.open(db);
-			String sql="select distinct `会计科目` from `account_real` where LEFT(`会计科目`,1)=1 order by `会计科目`";
-			PreparedStatement pstmt;
-			if(conn!=null){
-				try {
-					pstmt=conn.prepareStatement(sql);
-                    ResultSet rs=pstmt.executeQuery();
-					while (rs.next()) {
-						String s = rs.getString(1);
-						result.add(s);
-					}
-
-				}catch (SQLException e){
-					e.printStackTrace();
-				}finally {
-					ConnectUtil.close(conn);
-				}
-			}
-		}else if(!permit){
-			result=null;
-
-		}else {
-			result=null;
-		}
-		return result;
-	}
-	
 	public String getToken() {
 		String s="";
 		Connection conn=ConnectUtil.open("client_company");
