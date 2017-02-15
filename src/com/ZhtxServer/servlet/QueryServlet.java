@@ -139,7 +139,7 @@ public class QueryServlet extends HttpServlet {
 		//给定一级科目后，根据输入关键字来获得二级科目的智能提示
 			case "account_class2":{
 				String openid=request.getParameter("openid");
-				String class1=request.getParameter("class1");
+				String class1=Integer.parseInt(request.getParameter("class1"));
 				String keyword=request.getParameter("keyword");
 				QueryDaoImpl dao=new QueryDaoImpl();
 				List<String> list=dao.account_class2(openid,class1,keyword);
@@ -148,7 +148,7 @@ public class QueryServlet extends HttpServlet {
 				}else {
 					Gson gson=new Gson();
 					Type t= new TypeToken<List<String>>(){}.getType();
-					out.print(gson.toJson(list.t));
+					out.print(gson.toJson(list,t));
 				}
 				break;
 			}
@@ -165,7 +165,7 @@ public class QueryServlet extends HttpServlet {
 				}else {
 					Gson gson=new Gson();
 					Type t= new TypeToken<List<String>>(){}.getType();
-					out.print(gson.toJson(list.t));
+					out.print(gson.toJson(list,t));
 				}
 				break;
 			}
