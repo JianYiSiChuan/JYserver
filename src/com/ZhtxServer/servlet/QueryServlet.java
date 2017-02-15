@@ -119,10 +119,13 @@ public class QueryServlet extends HttpServlet {
 				}
 			break;
 		}
+
+		//获得一级会计科目列表，其中参数first_num是会计科目编号的第一个数字
 		case "account_class1":{
 			String openid=request.getParameter("openid");
+			int first_num=request.getParameter("first_num");
 			QueryDaoImpl dao= new QueryDaoImpl();
-			List<String> list=dao.account_class1(openid);
+			List<String> list=dao.account_class1(openid,first_num);
 			if (list == null){
 				out.print("0");
 			}else{
@@ -132,6 +135,40 @@ public class QueryServlet extends HttpServlet {
 			}
 			break;
 		}
+
+		//给定一级科目后，根据输入关键字来获得二级科目的智能提示
+			case "account_class2":{
+				String openid=request.getParameter("openid");
+				String class1=request.getParameter("class1");
+				String keyword=request.getParameter("keyword");
+				QueryDaoImpl dao=new QueryDaoImpl();
+				List<String> list=dao.account_class2(openid,class1,keyword);
+				if(list==null){
+					out.print("0");
+				}else {
+					Gson gson=new Gson();
+					Type t= new TypeToken<List<String>>(){}.getType();
+					out.print(gson.toJson(list.t));
+				}
+				break;
+			}
+		//根据提交的一级科目，二级科目查询指定时间的账户余额
+			case "account_balance":{
+				String openid=request.getParameter("openid");
+				String date=request.getParameter("date");
+				String class1=request.getParameter("class1");
+				String class2=request.getParameter("class2");
+				QueryDaoImpl dao=new QueryDaoImpl();
+				List<Double> list=dao.account_balance(openid,date,class1,class2);
+				if(list==null){
+					out.print("0");
+				}else {
+					Gson gson=new Gson();
+					Type t= new TypeToken<List<String>>(){}.getType();
+					out.print(gson.toJson(list.t));
+				}
+				break;
+			}
 		
 		//生成指定record表的csv文件
 		case "createcsv":{
