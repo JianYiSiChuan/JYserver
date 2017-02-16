@@ -173,6 +173,52 @@ public class QueryDaoImpl {
 		}
 		return result;
 	}
+	
+	//根据提交的一级科目和二级科目查询指定时间段的账户发生额
+	public List<Double> account_accumulation(String openid,String start,String end,String class1,String class2){
+		List<Double> result=new ArrayList<Double>();
+		String db = getDb(openid);
+		boolean permit = getPermit(openid, "account_balance");
+		if ((!db.equals("")) && (permit)) {
+			Connection conn = ConnectUtil.open(db);
+			String sql = "select `item_num` from `account_item` where `item_name`=?";
+			PreparedStatement pstmt;
+			if (conn != null) {
+				try {
+					double debit = 0;
+					double credit = 0;
+					String s = "";
+					pstmt = conn.prepareStatement(sql);
+					pstmt.setString(1, class1);
+					ResultSet rs = pstmt.executeQuery();
+					if (rs.next()) s = rs.getString(1);
+					String sql2="select `借贷方`,`金额` from `account_real` where `会计科目`=? and `class_2`=? and `时间` BETWEEN ? and ?";
+					PreparedStatement pstmt2=conn.prepareStatement(sql2);
+					pstmt2.setString(1,s);
+					pstmt2.setString(2,class2);
+					pstmt2.setString(3,start);
+					pstmt2.setString(4,end);
+					ResultSet rs2=pstmt2.executeQuery();
+					while (rs2.next()){
+						if(rs2.getString(1).equals("借")){
+							debit=debit+rs2.getDouble(2);
+						}else {
+							credit=credit+rs2.getDouble(2);
+						}
+					}
+					result.add(debit);
+					result.add(credit);
+				}catch (SQLException e) {
+					e.printStackTrace();
+				} finally {
+					ConnectUtil.close(conn);
+				}
+			}
+		}else {
+			result=null;
+		}
+		return result;
+	}
 
 	public String accountb(String openid) {
 		String result="",db=getDb(openid);
