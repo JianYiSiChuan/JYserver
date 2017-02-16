@@ -111,6 +111,9 @@ public class QueryDaoImpl {
 					for (String data:temp) {
 						if (data.contains(keyword)) {
 							result.add(data);
+						if(result.size()>8){
+							result=result.subList(0,7);
+						}
 						}
 					}
 				}catch (SQLException e){
