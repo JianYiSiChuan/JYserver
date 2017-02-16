@@ -169,6 +169,25 @@ public class QueryServlet extends HttpServlet {
 				}
 				break;
 			}
+				
+		//根据提交的一级科目和二级科目查询指定时间段的账户发生额
+			case "account_accumulation":{
+				String openid=request.getParameter("openid");
+				String start=request.getParameter("start");
+				String end=request.getParameter("end");
+				String class1=request.getParameter("class1");
+				String class2=request.getParameter("class2");
+				QueryDaoImpl dao=new QueryDaoImpl();
+				List<Double> list=dao.account_accumulation(openid,start,end,class1,class2);
+				if(list==null){
+					out.print("0");
+				}else {
+					Gson gson=new Gson();
+					Type t= new TypeToken<List<String>>(){}.getType();
+					out.print(gson.toJson(list,t));
+				}
+				break;
+			}
 		
 		//生成指定record表的csv文件
 		case "createcsv":{
